@@ -1,86 +1,149 @@
-/*
+const BooksModel = require("../models/BooksModel")
 const UserModel = require("../models/UserModel")
+//const ReviewModel = require("../models/ReviewModel")
+const mongoose = require("mongoose")
 
+//const ObjectId=mongoose.Types.ObjectId
+
+
+
+
+const isValidRequestBody = (requestBody) => {
+    return Object.keys(requestBody).length > 0
+}
 
 const isValid = function (value) {
     if (typeof value == undefined || value == null) return false
-    if ((value).length === 0) return false
-    if (typeof value === 'string' && (value).length > 0) return true
+    if (typeof value === 'string' && value.trim().length === 0) return false
+    return true
 }
-const isCorrectemail = function (email) {
-    return /^\w+([\.-]?\w+)@\w+([\. -]?\w+)(\.\w{2,3})+$/.test(email);
+
+const isValidobjectId = (objectId) => {
+    return mongoose.Types.ObjectId.isValid(objectId)
 }
-const CreateUser = async function (req, res) {
+
+
+
+//CREATE BOOK API
+
+const createBook = async function (req, res) {
     try {
-        let data = req.body
-        const { title, name, phone, email, password } = data;
-        if (Object.keys(data).length = 0) { return res.status(400).send({ status: false, msg: "No data provided" }) }
+        body = req.body
 
-        //if (Object.keys(data).length > 0) {
+        const { title, excerpt, userId, ISBN, category, subcategory, releasedAt } = body
 
-        if (!isValid(title)) { return res.status(400).send({ status: false, msg: "title is required" }) }
-        if (title != ("Mr" || "Mrs" || "Miss")) { return res.status(400).send({ status: false, msg: "Please provide an appropriate tittle" }) }
-        if (!isValid(name)) { return res.status(400).send({ status: false, msg: "name is required" }) }
-        if (!isValid(phone)) { return res.status(400).send({ status: false, msg: "phone is required" }) }
+        if (!isValidRequestBody(body)) {
+            return res.status(400).send({ status: false, msg: " please provide valid books details" })
+        }
 
-        let isUniquephone = await UserModel.findOne({ phone: phone })
-        if (isUniquephone) { return res.status(400).send({ status: false, msg: "This phone no is already exist" }) }
+        if (!isValid(title)) {
+            return res.status(400).send({ status: false, msg: "title is required" })
+        }
 
-        if (!isValid(email)) { return res.status(400).send({ status: false, msg: "email is required" }) }
-        if (!isValid(password)) { return res.status(400).send({ status: false, msg: "password is required" }) }
-        if (!isCorrectemail(email)) { return res.status(400).send({ status: false, msg: "Please povide a valid email" }) }
-        let isUniqueemail = await UserModel.findOne({ email: email })
-        if (isUniqueemail) { return res.status(400).send({ status: false, msg: "email is already exists" }) }
+        let isUsedTitle = await BooksModel.findOne({ title, isDeleted: false })
 
-        if (password.length < 8 || password.length > 15) { return res.status(400), send({ status: false, msg: "Password length should be greater than 8 or less than 15" }) }
+        if (isUsedTitle) {
+            return res.status(400).send({ status: false, msg: `this ${title} is already used` })
+        }
 
-        const newUser = await UserModel.create(data);
-        return res.status(201).send({ status: true, msg: "Success", newUser })
+        if (!isValid(excerpt)) {
+            return res.status(400).send({ status: false, msg: "excerpt is required" })
+        }
+
+        if (!isValid(userId)) {
+            return res.status(400).send({ status: false, msg: "userId is required" })
+        }
+
+        if (!isValidobjectId(userId)) {
+            return res.status(400).send({ status: false, msg: " please enter valid userId" })
+        }
+
+        let userDetails = await UserModel.findById(userId)
+
+        if (!userDetails) {
+            return res.status(404).send({ status: false, msg: "no user found" })
+        }
+
+        if (!isValid(ISBN)) {
+            return res.status(400).send({ status: false, msg: " ISBN is required" })
+        }
+
+        let isUsedISBN = await BooksModel.findOne({ ISBN })
+
+        if (isUsedISBN) {
+            return res.status(400).send({ status: false, msg: `this ${ISBN} is already used` })
+        }
+
+
+
+        //please find the regex for isbn
+
+
+
+
+        if (!isValid(category)) {
+            return res.status(400).send({ status: false, msg: "category is required" })
+        }
+
+        if (!isValid(subcategory)) {
+            return res.status(400).send({ status: false, msg: "subCategory is required" })
+        }
+
+        if (!isValid(releasedAt)) {
+            return res.status(400).send({ status: false, msg: "releasedAt is required" })
+        }
+        else {
+            let bookDetails = await BooksModel.create(body)
+            return res.status(201).send({ status: true, msg: "books created successfully", data: bookDetails })
+        }
+    }
+
+    catch (err) {
+        console.log(err)
+        return res.status(500).send({ status: false, msg: err.message })
+    }
+}
+
+
+const getBook = async (req, res) => {
+    try {
+        const input = req.query
+        const { userId, category, subcategory } = input
+
+
+        if (!((userId) || (category) || (subcategory)))
+
+            return res.status(404).send({ msg: false, msg: "plase enter some data to find book" })
+
+        // title, excerpt, userId, category, releasedAt, reviews      
+
+        const book = await BooksModel.find(input, { isDeleted: false }).select({ _id: 1, title: 1, excerpt: 1, userId: 1, category: 1, releasedAt: 1, reviews: 1 }).sort({ title: 1 })
+
+        if (!book) return res.send({ status: false, msg: "no such  data found" })
+
+        return res.status(200).send({ status: true, data: book })
     }
     catch (err) {
-
-        return res.status(500).send({ msg: err.message })
+        return res.status(500).send({ status: false, msg: err.message })
     }
 
 }
-const login = async function (req, res) {
+
+const updateBooks = async function (req, res) {
     try {
-        const mail = req.body.email
-        const pass = req.body.password
-        const data = req.body
-        if (Object.keys(data) == 0)
-            return res.status(400).send({ status: false, msg: "No input provided" })
+       let data = req.body
+        let bookId = req.params.bookId
+        if (!isValid(bookId)) {
+            return res.status(404).send({ status: false, msg: "Please provide a valid bookId in path params" })
 
-        //  if (Object.keys(data).length > 0) {
-
-        if (!isValid(email)) { return res.status(400).send({ status: false, msg: "email is required" }) }
-
-        if (!isCorrectemail(email)) { return res.status(400).send({ status: false, msg: "Please povide a valid email" }) }
-
-        if (!isValid(pass)) { return res.status(400).send({ status: false, msg: "password is required" }) }
-
-        if (pass.length < 8 || pass.length > 15) { return res.status(400), send({ status: false, msg: "Password length should be greater than 8 or less than 15" }) }
-
-        const UserMatch = await UserModel.findOne({ email: mail, password: pass })
-
-        if (!UserMatch) return res.status(400).send({ status: false, msg: "email or password is incorrect" })
-
-        const token = jwt.sign({
-            userId: UserMatch._id.toString(), iat: new Date(), exp: "30m"
-        }, "Secret-key")
-
-        res.setHeader("x-api-key", "token");
-        return res.status(200).send({ status: true, msg: "you are successfully logged in", token })
-    }
-    catch (error) {
-
-        return res.status(500).send({ msg: error.message })
+        }
+        let updateBook = await BooksModel.findOneAndUpdate({ _id: bookId, isDeleted: false }, { title: data.title, excerpt: data.excerpt, releasedate: data.releasedate, ISBN: data.ISBN },{new:true})
+        return res.status(200).send({ status: true, data: updateBook})
+    } catch (err) {
+        return res.status(500).send({ status: false, msg: err.message })
     }
 }
 
-
-module.exports.CreateUser = CreateUser
-module.exports.login = login */
-
-
-
+module.exports.getBook = getBook
+module.exports.createBook = createBook
+module.exports.updateBooks = updateBooks
