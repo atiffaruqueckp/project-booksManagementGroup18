@@ -6,12 +6,12 @@ const isValid = function (value) {
     if (typeof value === 'string' && value.trim().length === 0) return false
     return true
 }
-const isValidTitle = (title) => {
-    return ["Mr", "Mrs", "Miss"].indexOf(title) !== -1 //this method returns the position of the first
-    //  occurrence of a value in a String.
-    //return -1 if value is not found, is a case sensitive.
-    // indexof search in title
-}
+//const isValidTitle = (title) => {
+//  return ["Mr", "Mrs", "Miss"].indexOf(title) !== -1 //this method returns the position of the first
+//  occurrence of a value in a String.
+//return -1 if value is not found, is a case sensitive.
+// indexof search in title
+//}
 
 const CreateUser = async function (req, res) {
     try {
@@ -22,14 +22,17 @@ const CreateUser = async function (req, res) {
 
             if (!isValid(data.title)) { return res.status(400).send({ status: false, msg: "title is required" }) }
 
+            if (!(data.title.trim() == 'Mr' || data.title.trim() == 'Miss' || data.title.trim() == 'Mrs')) { return res.status(400).send({ status: false, msg: 'Please provide an appropriate title' }) }
+
+
             if (!isValid(data.name)) { return res.status(400).send({ status: false, msg: "name is required" }) }
 
             if (!isValid(data.phone)) { return res.status(400).send({ status: false, msg: "phone is required" }) }
 
             if (!isValid(data.email)) { return res.status(400).send({ status: false, msg: "email is required" }) }
 
-            if (!isValidTitle(data.title)) { return res.status(400).send({ status: false, msg: "Please type correct enum in title" }) }
-        
+            // if (!isValidTitle(data.title)) { return res.status(400).send({ status: false, msg: "Please type correct enum in title" }) }
+
 
             if (!isValid(data.password)) { return res.status(400).send({ status: false, msg: "password is required" }) }
 
@@ -79,11 +82,11 @@ const login = async function (req, res) {
 
             if (!isValid(data.password)) { return res.status(400).send({ status: false, msg: "password is required" }) }
 
-           
+
 
             if (password.length < 8 || password.length > 15) { return res.status(400).send({ status: false, msg: "Password length should be greater than 8 or less than 15" }) }
 
-            const UserMatch = await UserModel.findOne({ email: email ,  password: password })
+            const UserMatch = await UserModel.findOne({ email: email, password: password })
 
             if (!UserMatch) return res.status(400).send({ status: false, msg: "email or password is not correct" })
             //let dupli = await UserModel.findOne({ email: data.email })
@@ -92,9 +95,9 @@ const login = async function (req, res) {
             //let isUsedtoemail = await UserModel.findOne({ email})
 
             //if (isUsedtoemail) {
-              //  return res.status(400).send({ status: false, msg: `this ${email} is already used` })
+            //  return res.status(400).send({ status: false, msg: `this ${email} is already used` })
             //}
-    
+
             const token = jwt.sign({
                 userId: UserMatch._id.toString(), // iat:  Date.now(), expiresIn: "30m"
             }, "project 3")
@@ -110,7 +113,7 @@ const login = async function (req, res) {
 
     } catch (error) {
 
-        return res.status(500).send({ msg: error.message})
+        return res.status(500).send({ msg: error.message })
     }
 }
 

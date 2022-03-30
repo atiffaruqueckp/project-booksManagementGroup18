@@ -13,12 +13,15 @@ router.post("/register", UserController.CreateUser);
 
 router.post("/login", UserController.login);
 
-router.get("/books", authenticate.authenticate, BooksController.getBook);
-
-
 router.post("/books", authenticate.authenticate, BooksController.createBook)
 
+router.get("/books", authenticate.authenticate, BooksController.getBooks);
+
+router.get("/books/:bookId", authenticate.authenticate, BooksController.getBooksById);
+
 router.put("/books/:bookId", authenticate.authenticate, authorize.authCheck, BooksController.updateBooks)
+
+router.delete("/books/:bookId", authenticate.authenticate, authorize.authCheck, BooksController.deleteBookById)
 
 
 module.exports = router;
