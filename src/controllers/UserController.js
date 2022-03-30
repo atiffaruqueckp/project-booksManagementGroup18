@@ -99,8 +99,8 @@ const login = async function (req, res) {
             //}
 
             const token = jwt.sign({
-                userId: UserMatch._id.toString(), // iat:  Date.now(), expiresIn: "30m"
-            }, "project 3")
+                userId: UserMatch._id.toString(),  iat:  new Date().getTime()/1000, 
+            }, "project 3" , {expiresIn: "60m"});
 
             res.setHeader("x-api-key", "token");
             return res.status(201).send({ status: true, msg: "you are successfully logged in", token })

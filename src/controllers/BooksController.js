@@ -89,6 +89,8 @@ const createBook = async function (req, res) {
         if (!isValid(subcategory)) {
             return res.status(400).send({ status: false, msg: "subCategory is required" })
         }
+        //data.subcategory = data.subcategory.filter(x => x.trim());
+        //if (data.subcategory.length == 0) { return res.status(400).send({ status: false, message: "subcategory is required" }) }
 
         if (!isValid(releasedAt)) {
             return res.status(400).send({ status: false, msg: "releasedAt is required" })
@@ -196,7 +198,7 @@ let deleteBookById = async function (req, res) {
 
             }
 
-            let deletedBook = await BooksModel.findOneAndUpdate({ _id: id }, { $set: { isDeleted: true, deletedAt: Date.now() } })
+            let deletedBook = await BooksModel.findOneAndUpdate({ _id: id }, { $set: { isDeleted: true, deletedAt: Date.now() } }, { new: true })
             return res.status(200).send({ status: true, msg: "Requested book has been deleted", data: deletedBook })
         } else {
             return res.status(400).send({ status: false, msg: "BAD REQUEST" })
